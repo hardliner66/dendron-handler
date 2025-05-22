@@ -1,0 +1,11 @@
+{
+    "cSpell.words": [
+        "dendron",
+        "serde",
+        "shellexpand",
+        "utfx"
+    ],
+    "cSpell.ignorePaths": [
+        "Cargo.lock"
+    ]
+}
