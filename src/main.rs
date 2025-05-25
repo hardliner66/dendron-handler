@@ -5,10 +5,13 @@ use std::{collections::HashMap, path::PathBuf, process::Command as StdCommand};
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 
+use anyhow::bail;
+#[cfg(target_os = "windows")]
+use registry::{Data, Hive, Security};
+
 use clap::Parser;
 use directories::{BaseDirs, UserDirs};
 use elevated_command::Command;
-use registry::{Data, Hive, Security};
 use serde::Deserialize;
 use url::Url;
 use utfx::U16CString;
@@ -61,6 +64,28 @@ fn get_dendron_dir(vault: &str) -> anyhow::Result<PathBuf> {
         .clone())
 }
 
+#[cfg(not(target_os = "windows"))]
+fn register_protocol_handler() -> anyhow::Result<()> {
+    bail!("Automatic handler registration is only supported on Windows");
+}
+
+#[cfg(target_os = "windows")]
+fn register_protocol_handler() -> anyhow::Result<()> {
+    if !Command::is_elevated() {
+        let cmd = StdCommand::new(std::env::current_exe()?);
+        let elevated_cmd = Command::new(cmd);
+        _ = elevated_cmd.output().unwrap();
+        return Ok(());
+    }
+
+    let hive = Hive::ClassesRoot.create("dendron", Security::Write)?;
+    hive.set_value("URL Protocol", &Data::String(U16CString::from_str("")?))?;
+    let hive = Hive::ClassesRoot.create(r"dendron\shell\open\command", Security::Write)?;
+    let command = format!("{} \"%1\"", std::env::current_exe()?.to_string_lossy());
+    hive.set_value("", &Data::String(U16CString::from_str(command)?))?;
+    Ok(())
+}
+
 fn main() -> anyhow::Result<()> {
     let Cli { url } = Cli::parse();
     if let Some(url) = url {
@@ -92,18 +117,7 @@ fn main() -> anyhow::Result<()> {
         ]);
         cmd.spawn()?;
     } else {
-        if !Command::is_elevated() {
-            let cmd = StdCommand::new(std::env::current_exe()?);
-            let elevated_cmd = Command::new(cmd);
-            _ = elevated_cmd.output().unwrap();
-            return Ok(());
-        }
-
-        let hive = Hive::ClassesRoot.create("dendron", Security::Write)?;
-        hive.set_value("URL Protocol", &Data::String(U16CString::from_str("")?))?;
-        let hive = Hive::ClassesRoot.create(r"dendron\shell\open\command", Security::Write)?;
-        let command = format!("{} \"%1\"", std::env::current_exe()?.to_string_lossy());
-        hive.set_value("", &Data::String(U16CString::from_str(command)?))?;
+        register_protocol_handler()?;
     }
 
     Ok(())
