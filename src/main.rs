@@ -5,16 +5,22 @@ use std::{collections::HashMap, path::PathBuf, process::Command as StdCommand};
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 
+#[cfg(not(target_os = "windows"))]
 use anyhow::bail;
+
 #[cfg(target_os = "windows")]
 use registry::{Data, Hive, Security};
 
+#[cfg(target_os = "windows")]
+use elevated_command::Command;
+
+#[cfg(target_os = "windows")]
+use utfx::U16CString;
+
 use clap::Parser;
 use directories::{BaseDirs, UserDirs};
-use elevated_command::Command;
 use serde::Deserialize;
 use url::Url;
-use utfx::U16CString;
 use which::which;
 
 #[derive(Parser, Debug)]
