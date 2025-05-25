@@ -2,7 +2,10 @@
 Small helper for opening dendron files locally in vscode through links.
 
 ## Install
-From source:
+### Pre-built binaries
+You can get the pre-built binaries from the [releases](https://github.com/hardliner66/dendron-handler/releases/latest)
+
+### From source
 `cargo install --git https://github.com/hardliner66/dendron_handler`
 
 ## Usage
@@ -13,6 +16,8 @@ On other systems you have to do it manually, as I don't know how to automate tha
 
 After the handler is registered, clicking a link with the right format should open your dendron
 workspace and the specified files.
+
+To help creating links, I created a simple [helper extension](https://github.com/hardliner66/dendron-handler-extension).
 
 ## URL Format
 ```html
