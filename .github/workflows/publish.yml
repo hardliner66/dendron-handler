@@ -1,0 +1,103 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    needs: release
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run tests
+        run: cargo test --verbose
+
+      - name: Run build
+        run: |
+          cargo build --all --release
+          strip --strip-all ./target/release/dendron_handler
+          tar -czf dendron_handler-linux.tar.gz -C ./target/release/ dendron_handler
+
+      - name: Upload release
+        id: upload-release-linux
+        uses: alexellis/upload-assets@0.2.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_paths: '["dendron_handler-linux.tar.gz"]'
+
+  build-macos:
+    runs-on: macos-latest
+    permissions: write-all
+    needs: release
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run tests
+        run: cargo test --verbose
+
+      - name: Run build
+        run: |
+          cargo build --all --release
+          tar -czf dendron_handler-macos.tar.gz -C ./target/release/ dendron_handler
+
+      - name: Upload release
+        id: upload-release-linux
+        uses: alexellis/upload-assets@0.2.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_paths: '["dendron_handler-macos.tar.gz"]'
+
+  build-windows:
+    runs-on: windows-2019
+    permissions: write-all
+    needs: release
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run tests
+        run: cargo test --verbose
+
+      - name: Run build
+        run: cargo build --all --release
+
+      - name: Create Zip
+        run: Compress-Archive -Path ./target/release/*.exe -Destination dendron_handler-windows.zip
+
+      - name: Upload release
+        id: upload-release-windows
+        uses: alexellis/upload-assets@0.2.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_paths: '["dendron_handler-windows.zip"]'
