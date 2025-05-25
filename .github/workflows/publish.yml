@@ -39,8 +39,8 @@ jobs:
       - name: Run build
         run: |
           cargo build --all --release
-          strip --strip-all ./target/release/dendron_handler
-          tar -czf dendron_handler-linux.tar.gz -C ./target/release/ dendron_handler
+          strip --strip-all ./target/release/dendron-handler
+          tar -czf dendron-handler-linux.tar.gz -C ./target/release/ dendron-handler
 
       - name: Upload release
         id: upload-release-linux
@@ -49,7 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_paths: '["dendron_handler-linux.tar.gz"]'
+          asset_paths: '["dendron-handler-linux.tar.gz"]'
 
   build-macos:
     runs-on: macos-latest
@@ -65,7 +65,7 @@ jobs:
       - name: Run build
         run: |
           cargo build --all --release
-          tar -czf dendron_handler-macos.tar.gz -C ./target/release/ dendron_handler
+          tar -czf dendron-handler-macos.tar.gz -C ./target/release/ dendron-handler
 
       - name: Upload release
         id: upload-release-linux
@@ -74,7 +74,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_paths: '["dendron_handler-macos.tar.gz"]'
+          asset_paths: '["dendron-handler-macos.tar.gz"]'
 
   build-windows:
     runs-on: windows-2019
@@ -91,7 +91,7 @@ jobs:
         run: cargo build --all --release
 
       - name: Create Zip
-        run: Compress-Archive -Path ./target/release/*.exe -Destination dendron_handler-windows.zip
+        run: Compress-Archive -Path ./target/release/*.exe -Destination dendron-handler-windows.zip
 
       - name: Upload release
         id: upload-release-windows
@@ -100,4 +100,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_paths: '["dendron_handler-windows.zip"]'
+          asset_paths: '["dendron-handler-windows.zip"]'
